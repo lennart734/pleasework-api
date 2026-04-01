@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Personalized Feedback Evaluation</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body { 
+      font-family: Arial, sans-serif; 
+      padding: 20px; 
+      background-color: #f5f5f5;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    h1 { 
+      color: #333; 
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+
+    p { 
+      font-size: 16px; 
+      color: #555; 
+      line-height: 1.6;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 20px;
+      font-style: italic;
+    }
+
+    .feedback { 
+      white-space: pre-wrap; 
+      padding: 20px; 
+      border: 1px solid #ccc; 
+      background-color: #fff; 
+      margin-top: 20px; 
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      font-size: 16px;
+      line-height: 1.8;
+      color: #333;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 30px;
+      height: 30px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #3498db;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 15px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .error {
+      background-color: #ffebee;
+      border: 1px solid #ef9a9a;
+      color: #c62828;
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+
+    .no-feedback {
+      background-color: #fff3e0;
+      border: 1px solid #ffcc80;
+      color: #e65100;
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+
+    .success-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .success-icon {
+      width: 24px;
+      height: 24px;
+      background-color: #4caf50;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+    }
+
+    .timestamp {
+      font-size: 12px;
+      color: #999;
+      margin-top: 15px;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Your Personalized Feedback Evaluation</h1>
+    <p class="subtitle">Check out your personalized sleep insights below!</p>
+
+    <div id="feedback-container">
+      <div class="loading" id="loading-state">
+        <div class="loading-spinner"></div>
+        <p>Loading your personalized feedback...</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Get feedback from URL parameter
+    const params = new URLSearchParams(window.location.search);
+    const feedbackText = params.get('text');
+    const feedbackId = params.get('id');
+    
+    const container = document.getElementById('feedback-container');
+    const loadingState = document.getElementById('loading-state');
+
+    // Function to display feedback
+    function showFeedback(text) {
+      container.innerHTML = `
+        <div class="feedback">
+          <div class="success-header">
+            <div class="success-icon">&#10003;</div>
+            <span style="font-weight: bold; color: #333;">Your AI-Generated Feedback</span>
+          </div>
+          <div style="white-space: pre-wrap;">${escapeHtml(text)}</div>
+          <div class="timestamp">Generated: ${new Date().toLocaleString()}</div>
+        </div>
+      `;
+    }
+
+    // Function to escape HTML
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Function to show error
+    function showError(message) {
+      container.innerHTML = `
+        <div class="error">
+          <strong>Error:</strong> ${escapeHtml(message)}
+        </div>
+      `;
+    }
+
+    // Function to show no feedback message
+    function showNoFeedback() {
+      container.innerHTML = `
+        <div class="no-feedback">
+          <strong>No feedback found.</strong><br><br>
+          To view your personalized feedback, please complete the survey first. 
+          After completing the Jotform survey, you will be redirected here with your feedback.
+          <br><br>
+          <small>Expected URL format: <code>?text=Your feedback here</code></small>
+        </div>
+      `;
+    }
+
+    // Main logic
+    (async function() {
+      // Option 1: Direct text parameter (like Netlify site)
+      if (feedbackText) {
+        showFeedback(feedbackText);
+        return;
+      }
+
+      // Option 2: Fetch from API using ID
+      if (feedbackId) {
+        try {
+          const response = await fetch(`/api/feedback?id=${encodeURIComponent(feedbackId)}`);
+          const result = await response.json();
+          
+          if (result.success && result.data && result.data.feedback) {
+            showFeedback(result.data.feedback);
+          } else {
+            showError(result.error || 'Feedback not found');
+          }
+        } catch (error) {
+          showError('Could not load feedback. Please try again later.');
+        }
+        return;
+      }
+
+      // No parameters - show info message
+      showNoFeedback();
+    })();
+  </script>
+</body>
+</html>
