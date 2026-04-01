@@ -76,15 +76,6 @@
       100% { transform: rotate(360deg); }
     }
 
-    .error {
-      background-color: #ffebee;
-      border: 1px solid #ef9a9a;
-      color: #c62828;
-      padding: 20px;
-      border-radius: 8px;
-      margin-top: 20px;
-    }
-
     .no-feedback {
       background-color: #fff3e0;
       border: 1px solid #ffcc80;
@@ -137,15 +128,10 @@
   </div>
 
   <script>
-    // Get feedback from URL parameter
     const params = new URLSearchParams(window.location.search);
     const feedbackText = params.get('text');
-    const feedbackId = params.get('id');
-    
     const container = document.getElementById('feedback-container');
-    const loadingState = document.getElementById('loading-state');
 
-    // Function to display feedback
     function showFeedback(text) {
       container.innerHTML = `
         <div class="feedback">
@@ -159,63 +145,27 @@
       `;
     }
 
-    // Function to escape HTML
     function escapeHtml(text) {
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
     }
 
-    // Function to show error
-    function showError(message) {
-      container.innerHTML = `
-        <div class="error">
-          <strong>Error:</strong> ${escapeHtml(message)}
-        </div>
-      `;
-    }
-
-    // Function to show no feedback message
     function showNoFeedback() {
       container.innerHTML = `
         <div class="no-feedback">
           <strong>No feedback found.</strong><br><br>
           To view your personalized feedback, please complete the survey first. 
           After completing the Jotform survey, you will be redirected here with your feedback.
-          <br><br>
-          <small>Expected URL format: <code>?text=Your feedback here</code></small>
         </div>
       `;
     }
 
-    // Main logic
-    (async function() {
-      // Option 1: Direct text parameter (like Netlify site)
-      if (feedbackText) {
-        showFeedback(feedbackText);
-        return;
-      }
-
-      // Option 2: Fetch from API using ID
-      if (feedbackId) {
-        try {
-          const response = await fetch(`/api/feedback?id=${encodeURIComponent(feedbackId)}`);
-          const result = await response.json();
-          
-          if (result.success && result.data && result.data.feedback) {
-            showFeedback(result.data.feedback);
-          } else {
-            showError(result.error || 'Feedback not found');
-          }
-        } catch (error) {
-          showError('Could not load feedback. Please try again later.');
-        }
-        return;
-      }
-
-      // No parameters - show info message
+    if (feedbackText) {
+      showFeedback(feedbackText);
+    } else {
       showNoFeedback();
-    })();
+    }
   </script>
 </body>
 </html>
